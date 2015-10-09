@@ -1,0 +1,19 @@
+{
+  "name": "vk-desktop",
+  "version": "0.5.0",
+  "description": "VkDesktop App",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "src/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "~2.1.4",
+    "iron-elements": "PolymerElements/iron-elements#^1.0.0",
+    "paper-elements": "PolymerElements/paper-elements#^1.0.0",
+    "polymer": "Polymer/polymer#^1.1.0"
+  }
+}

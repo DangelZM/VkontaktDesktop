@@ -1,0 +1,121 @@
+<dom-module id="chatpage-screen">
+    <style>
+        #back-button {
+            cursor: pointer;
+        }
+        #page-title {
+            background: #ededed;
+            padding: 10px 15px;
+            border-bottom: 1px solid #ccc;
+        }
+        #messages-list {
+            padding: 15px;
+            margin-top: 40px;
+            overflow-y: scroll;
+        }
+
+        #input-box {
+            flex-basis: 100px;
+            background: #efefef;
+            border: 1px solid #DAE1E8;
+            border-left: none;
+            border-right: none;
+        }
+
+        .message-item {
+            max-width: 600px;
+            margin: 0 auto;
+            /*border: 1px solid #369;*/
+            padding: 10px;
+        }
+
+        .author-img {
+            width: 32px;
+            height: 32px;
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+            margin-right: 10px;
+        }
+
+        .message-body {
+
+        }
+    </style>
+    <template>
+        <iron-ajax id="ajax" auto
+                   handle-as="json"
+                   last-response="{{data}}"></iron-ajax>
+        <paper-header-panel mode="standard">
+            <paper-toolbar id="mainToolbar">
+                <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
+                <paper-button id="back-button">
+                    <iron-icon icon="arrow-back"></iron-icon>
+                    К списку диалогов
+                </paper-button>
+            </paper-toolbar>
+            <div id="page-title">[[fullname]]</span></div>
+            <div id="page-holder" class="content layout vertical fit">
+                <div id="messages-list" class="flex">
+                    <template is="dom-repeat" items="[[data.response]]">
+                        <div class="message-item layout horizontal">
+                            <template is="dom-if" if="[[item.out]]">
+                                <img class="author-img" src="[[currentUser.photo_50]]" alt=""/>
+                                <div class="message-body flex">[[item.body]]</div>
+                            </template>
+                            <template is="dom-if" if="[[!item.out]]">
+                                <img class="author-img" src="[[screenParams.user.photo_50]]" alt=""/>
+                                <div class="message-body flex">[[item.body]]</div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+                <div id="input-box" class="relative">
+                    <textarea class="fit"></textarea>
+                </div>
+            </div>
+        </paper-header-panel>
+    </template>
+    <script>
+        Polymer({
+            is: "chatpage-screen",
+            properties: {
+                screenParams: {
+                    type: Object,
+                    observer: 'screenParamsChanged'
+                },
+                fullname: {
+                    type: String,
+                    computed: 'getFullname(screenParams.user)'
+                },
+                currentUser: {
+                    type: Object
+                }
+            },
+            listeners: {
+                'back-button.tap': 'back'
+            },
+            getFullname: function (user) {
+                return user.first_name + ' ' + user.last_name;
+            },
+            back: function (e) {
+                e.stopPropagation();
+                app.route = 'chats';
+            },
+            setScreenParams: function (data) {
+                console.log('ScreenParams :', data);
+                this.set('screenParams', data);
+            },
+            screenParamsChanged: function(){
+                this.currentUser = app.currentUser;
+                var code = [
+                    'var response = API.messages.getHistory({"user_id": ' + this.screenParams.user.id + ', "count": 0});',
+                    'var offset = (response.count > 20)? response.count - 20 : 0;',
+                    'var messages = API.messages.getHistory({"user_id": ' + this.screenParams.user.id + ', "offset": offset, "count": 20, rev: 1});',
+                    'return messages.items;'
+                ].join('');
+                this.$.ajax.url = "https://api.vk.com/method/execute?v=5.37&code=" + code + "&access_token=" + app.token;
+            }
+        });
+    </script>
+</dom-module>

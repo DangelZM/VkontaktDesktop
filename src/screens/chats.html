@@ -1,0 +1,91 @@
+<dom-module id="chats-screen">
+    <style>
+        #subheader {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ccc;
+        }
+        #dialogs {
+            padding: 10px;
+        }
+        .dialog-item {
+            border-bottom: 1px solid #ddd;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .dialog-img {
+            -webkit-border-radius: 50%;
+            -moz-border-radius: 50%;
+            border-radius: 50%;
+            flex-basis: 50px;
+        }
+        .fullname {
+            line-height: 50px;
+            padding:0 15px;
+            flex-basis: 250px;
+        }
+        .last-message {
+            line-height: 50px;
+            padding-left: 15px;
+            overflow: hidden;
+            height: 50px;
+            text-overflow: ellipsis;
+        }
+    </style>
+    <template>
+        <iron-ajax id="ajax" auto
+            handle-as="json"
+            last-response="{{data}}"></iron-ajax>
+        <paper-header-panel mode="standard">
+            <paper-toolbar id="mainToolbar">
+                <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
+                <div>Диалоги</div>
+            </paper-toolbar>
+            <div id="subheader"><span>[[data.response.count]]</span> диалогов</div>
+            <div id="dialogs">
+                <template is="dom-repeat" items="[[data.response.items]]">
+                    <div class="dialog-item layout horizontal wrap" on-tap="itemTap">
+                        <img class="dialog-img" src="[[item.user.photo_50]]" alt="" />
+                        <div class="fullname">
+                            <span>[[item.user.first_name]]</span> <span>[[item.user.last_name]]</span>
+                            <template is="dom-if" if="{{item.user.online}}">(Online)</template>
+                        </div>
+                        <div class="last-message flex-1">[[item.dialog.body]]</div>
+                    </div>
+                </template>
+            </div>
+        </paper-header-panel>
+    </template>
+    <script>
+        Polymer({
+            is: "chats-screen",
+            ready: function(){
+                var code = [
+                    'var i = 0;',
+                    'var response = API.messages.getDialogs();',
+                    'var dialogs = response.items@.message;',
+                    'var newDialogs = {};',
+                    'newDialogs.count = response.count;',
+                    'newDialogs.items = [];',
+
+                    'while(i<dialogs.length) {',
+                        'var user = API.users.get({"user_ids": dialogs[i].user_id, "fields": "online,photo_50"});',
+                        'newDialogs.items.push({',
+                            '"dialog": dialogs[i],',
+                            '"user": user[0]',
+                        '});',
+                        'i = i%2b1;',
+                    '}',
+                    'return newDialogs;'
+                ].join('');
+                this.$.ajax.url = "https://api.vk.com/method/execute?v=5.37&code=" + code + "&access_token=" + app.token;
+            },
+            itemTap: function (e) {
+                var model = e.model;
+                console.log(model.get('item.dialog.user_id'), model.get('item.dialog.id'));
+                app.route = 'chatpage|' + JSON.stringify({ user: model.get('item.user'), start_message_id: model.get('item.dialog.id') });
+            }
+        });
+    </script>
+</dom-module>

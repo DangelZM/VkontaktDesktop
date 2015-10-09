@@ -1,0 +1,130 @@
+<dom-module id="audio-screen">
+    <style>
+        #audioList {
+            padding: 10px;
+        }
+        .audio-item {
+            display: flex;
+            flex-direction: row;
+            cursor: pointer;
+            height: 40px;
+            line-height: 40px;
+        }
+        .audio-item:hover {
+            background: #CADAEA;
+        }
+        .audio-item[selected] {
+            background: #5F7FA2;
+            color: #fff;
+        }
+        .audio-item .icon {
+            flex-basis: 24px;
+            margin: 0 8px;
+        }
+        .audio-item .title {
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            padding-right: 15px;
+        }
+        .audio-item .duration {
+            flex-basis: 40px;
+            padding: 0 10px;
+            text-align: right;
+        }
+    </style>
+    <template>
+        <paper-header-panel mode="standard">
+            <paper-toolbar id="mainToolbar">
+                <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
+                <div class="title">Аудиозаписи</div>
+            </paper-toolbar>
+            <iron-list id="audioList" items="[[playlist]]" as="item" selected-item="{{activeSong}}" selection-enabled>
+                <template>
+                    <div class="audio-item" selected$="{{selected}}" on-tap="selectHandler">
+                        <div class="icon">
+                                <iron-icon hidden="{{!selected}}" icon$="[[iconForItem(currentStatus)]]"></iron-icon>
+                                <iron-icon hidden="{{selected}}" icon="av:play-arrow"></iron-icon>
+                        </div>
+                        <div class="title"><span>[[item.artist]]</span> - <span>[[item.title]]</span></div>
+                        <div class="duration">
+                            <span hidden="{{!selected}}">[[currentTime]]</span>
+                            <span hidden="{{selected}}">[[durationTime(item.duration)]]</span>
+                        </div>
+                    </div>
+                </template>
+            </iron-list>
+        </paper-header-panel>
+    </template>
+    <script>
+        Polymer({
+            is: "audio-screen",
+            properties: {
+              activeSong: {
+                  type: Object,
+                  notify: true
+              },
+              playlist: Array,
+              currentTime: String,
+              currentStatus: {
+                  type: String,
+                  notify: true
+              }
+            },
+            ready: function(){
+                var self = this;
+                var player = app.player;
+                var info = player.getInfo();
+                console.log('Player info: ', info);
+                this.playlist = info.playlist;
+                this.currentStatus = info.status;
+                this.currentTime = info.playedTime;
+                this.$.audioList.selectItem(info.currentTrackIndex);
+
+                player.addEventListener('timeupdate', function (e) {
+                    self.currentTime = e.target.playedTime;
+                });
+                player.addEventListener('play', function (e) {
+                    self.currentStatus = 'play';
+                });
+                player.addEventListener('pause', function (e) {
+                    self.currentStatus = 'pause';
+                });
+                player.addEventListener('current-track-index-changed', function (e) {
+                    self.$.audioList.selectItem(e.detail.value);
+                });
+            },
+            selectHandler: function(e){
+                var selected = e.model.get('selected');
+                if(selected){
+                    e.preventDefault();
+                    e.stopPropagation();
+                    app.player.togglePlay();
+                } else {
+                    console.log('Index: ', e.model.get('index'));
+                    e.preventDefault();
+                    e.stopPropagation();
+                    app.player.playTrack(e.model.get('index'));
+                }
+            },
+            iconForItem: function(status) {
+                if(status === "pause"){
+                    return 'av:play-arrow';
+                } else {
+                    return 'av:pause';
+                }
+            },
+            durationTime: function (duration) {
+                var minutes, seconds;
+
+                minutes = parseInt(duration / 60, 10);
+                seconds = parseInt(duration % 60, 10);
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                return minutes + ":" + seconds;
+            }
+        });
+    </script>
+</dom-module>

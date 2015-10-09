@@ -1,0 +1,39 @@
+body {
+    background: #fafafa;
+    font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #333;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+
+#main-holder {
+    flex: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-content: stretch;
+    align-items: stretch;
+}
+
+#main-holder .top {
+    flex-basis: 32px;
+    height: 32px;
+    background: #ededed;
+}
+
+#main-holder .middle {
+    flex: 1;
+    position: relative;
+}
+
+#main-holder .bottom {
+    flex-basis: 50px;
+    height: 50px;
+    background: #ededed;
+}
+
+.menu-item {
+    cursor: pointer;
+}

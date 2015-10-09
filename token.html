@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Check token</title>
+</head>
+<body>
+    <script>
+        var remote = window.require('remote');
+        var ipc = window.require('ipc');
+        var BrowserWindow = remote.require('browser-window');
+        var request = require('request');
+
+        if(!localStorage.getItem('authToken')){
+            startAuthFlow();
+        } else {
+            request("https://api.vk.com/method/users.get?v=5.37&access_token=" + localStorage.getItem('authToken'), function (error, response, body) {
+                if (!error && response.statusCode == 200) {
+                    var json = JSON.parse(body);
+                    if(json.error && (json.error.error_code === 5)){
+                        startAuthFlow();
+                    } else {
+                        startApp();
+                    }
+                } else {
+                    startAuthFlow();
+                }
+            });
+        }
+
+        function startApp() {
+            ipc.send('startApp');
+        }
+
+        function startAuthFlow() {
+            console.log('startAuthFlow');
+            var scope = 'friends,wall,audio,messages';
+            var authWin = new BrowserWindow({
+                width: 400,
+                height: 300,
+                show: false,
+                'always-on-top': true,
+                'node-integration': false
+            });
+            authWin.loadUrl('https://api.vkontakte.ru/oauth/authorize?client_id=5053194&scope=' + scope + '&redirect_uri=blank.html&display=popup&response_type=token&v=5.37&lang=ru');
+
+            authWin.webContents.on('will-navigate', function (event, url) {
+                handleCallback(url);
+            });
+
+            authWin.webContents.on('did-get-redirect-request', function (event, oldUrl, newUrl) {
+                handleCallback(newUrl);
+            });
+
+            authWin.webContents.on('did-get-response-details', function (event, status, newUrl) {
+                handleCallback(newUrl);
+            });
+
+            function handleCallback (url) {
+                var matches = url.match(/\#(?:access_token)\=([\S\s]*?)\&/);
+
+                if (matches) {
+                    localStorage.authToken = matches[1];
+                    authWin.close();
+                    startApp();
+                } else {
+                    authWin.show();
+                }
+            }
+        }
+    </script>
+</body>
+</html>
