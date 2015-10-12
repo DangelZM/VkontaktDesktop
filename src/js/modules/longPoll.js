@@ -30,7 +30,11 @@
           var json = JSON.parse(body);
           if(json.ts){
             if(json.updates.length > 0){
-              console.log('Long Poll Updated:', json);
+              _.each(json.updates, function(update){
+                console.log('Long Poll Updated:', update);
+                processUpdate(update);
+
+              });
             }
             getUpdate(json.ts);
           }
@@ -40,6 +44,12 @@
           initLongPoll();
         }
       });
+    }
+
+    function processUpdate(update) {
+      if(update[0] === 4){
+        console.log("Получено сообщение");
+      }
     }
 
   })();

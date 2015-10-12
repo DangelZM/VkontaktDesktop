@@ -1,11 +1,11 @@
 {
-  "name": "vk-desktop",
+  "name": "vkdesktop",
   "version": "0.5.0",
   "description": "",
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . VkDesktop --platform=win32 --arch=x64 --version=0.33.3"
+    "build": "electron-packager . VkDesktop --platform=win32 --arch=x64 --version=0.33.3 --out=./release"
   },
   "author": "",
   "license": "ISC",

@@ -70,11 +70,13 @@
                     'newDialogs.items = [];',
 
                     'while(i<dialogs.length) {',
+                        'if(!dialogs[i].chat_id){', //TODO remove for group chat
                         'var user = API.users.get({"user_ids": dialogs[i].user_id, "fields": "online,photo_50"});',
                         'newDialogs.items.push({',
                             '"dialog": dialogs[i],',
                             '"user": user[0]',
                         '});',
+                        '}',
                         'i = i%2b1;',
                     '}',
                     'return newDialogs;'

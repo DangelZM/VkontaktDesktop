@@ -3,30 +3,68 @@
         #back-button {
             cursor: pointer;
         }
+        #page-holder {
+            height: 100%;
+        }
         #page-title {
+            flex-basis: 20px;
+            min-height: 20px;
             background: #ededed;
             padding: 10px 15px;
             border-bottom: 1px solid #ccc;
         }
+
         #messages-list {
             padding: 15px;
-            margin-top: 40px;
-            overflow-y: scroll;
+            overflow-y: auto;
         }
 
         #input-box {
-            flex-basis: 100px;
+            min-height: 100px;
             background: #efefef;
             border: 1px solid #DAE1E8;
             border-left: none;
             border-right: none;
         }
 
+        .input-wrap {
+            max-width: 620px;
+            margin: 10px auto;
+            padding: 0 10px;
+        }
+
+        .img-from, .img-to {
+            flex-basis: 50px;
+        }
+
+        .img-from > img, .img-to > img {
+            -webkit-border-radius: 3px;
+            -moz-border-radius: 3px;
+            border-radius: 3px;
+        }
+
+        .input-form {
+            margin: 0 10px;
+        }
+
         .message-item {
             max-width: 600px;
             margin: 0 auto;
-            /*border: 1px solid #369;*/
             padding: 10px;
+        }
+
+        #messages-text {
+            min-height: 43px;
+            max-height: 100px;
+            width: auto;
+            border: 1px solid #C0CAD5;
+            padding: 3px;
+            margin-bottom: 10px;
+            -webkit-border-radius: 2px;
+            -moz-border-radius: 2px;
+            border-radius: 2px;
+            background: #fff;
+            overflow-y: auto;
         }
 
         .author-img {
@@ -38,8 +76,8 @@
             margin-right: 10px;
         }
 
-        .message-body {
-
+        .controls-holder {
+            text-align: right;
         }
     </style>
     <template>
@@ -54,24 +92,35 @@
                     К списку диалогов
                 </paper-button>
             </paper-toolbar>
-            <div id="page-title">[[fullname]]</span></div>
-            <div id="page-holder" class="content layout vertical fit">
-                <div id="messages-list" class="flex">
-                    <template is="dom-repeat" items="[[data.response]]">
-                        <div class="message-item layout horizontal">
-                            <template is="dom-if" if="[[item.out]]">
-                                <img class="author-img" src="[[currentUser.photo_50]]" alt=""/>
-                                <div class="message-body flex">[[item.body]]</div>
-                            </template>
-                            <template is="dom-if" if="[[!item.out]]">
-                                <img class="author-img" src="[[screenParams.user.photo_50]]" alt=""/>
-                                <div class="message-body flex">[[item.body]]</div>
-                            </template>
-                        </div>
-                    </template>
+            <div id="page-holder" class="fit layout vertical">
+                <div class="flex layout vertical">
+                    <div id="page-title">[[fullname]]</div>
+                    <div id="messages-list" class="flex relative">
+                        <template is="dom-repeat" items="[[messages]]">
+                            <div class="message-item layout horizontal">
+                                <template is="dom-if" if="[[item.out]]">
+                                    <img class="author-img" src="[[currentUser.photo_50]]" alt=""/>
+                                    <div class="message-body flex">[[item.body]]</div>
+                                </template>
+                                <template is="dom-if" if="[[!item.out]]">
+                                    <img class="author-img" src="[[screenParams.user.photo_50]]" alt=""/>
+                                    <div class="message-body flex">[[item.body]]</div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
                 </div>
-                <div id="input-box" class="relative">
-                    <textarea class="fit"></textarea>
+                <div id="input-box">
+                    <div class="input-wrap layout horizontal">
+                        <div class="img-from"><img src="[[currentUser.photo_50]]" alt=""/></div>
+                        <div class="input-form flex">
+                            <div id="messages-text" contenteditable="true"></div>
+                            <div class="controls-holder">
+                                <button id="send-button">Отправить</button>
+                            </div>
+                        </div>
+                        <div class="img-to"><img src="[[screenParams.user.photo_50]]" alt=""/></div>
+                    </div>
                 </div>
             </div>
         </paper-header-panel>
@@ -90,23 +139,84 @@
                 },
                 currentUser: {
                     type: Object
+                },
+                data: {
+                    type: Object,
+                    observer: '_dataChanged'
+                },
+                messages: {
+                    type: Array,
+                    value: function() {
+                        return [];
+                    }
+                },
+                messageActions: {
+                    type: Object,
+                    value: function(){
+                        var self = this;
+                        return {
+                            add: function(e){
+                                console.log('Chat page update: ', e.detail.message);
+                                self.push('messages', e.detail.message);
+                                self.scrollToBottom();
+                            }
+                        }
+                    }
                 }
+
             },
             listeners: {
-                'back-button.tap': 'back'
+                'back-button.tap': 'back',
+                'send-button.tap': 'send'
+            },
+            _guidGen: function () {
+                return Number(('' + Math.floor(Math.random() * 10e2)) + ('' + Date.now()));
+            },
+            _dataChanged: function (data) {
+                var self = this;
+                console.log('Messages: ', data.response);
+                this.messages = data.response;
+                this.scrollToBottom();
             },
             getFullname: function (user) {
                 return user.first_name + ' ' + user.last_name;
+            },
+            scrollToBottom: function () {
+                var self = this;
+                setTimeout(function () {
+                    self.$['messages-list'].scrollTop = self.$['messages-list'].scrollHeight;
+                    console.log('scroll-to-bottom');
+                }, 300);
             },
             back: function (e) {
                 e.stopPropagation();
                 app.route = 'chats';
             },
+            send: function(){
+                var text = this.$['messages-text'];
+                if(text.textContent !== ''){
+                    var params = [
+                        "&user_id=" + this.screenParams.user.id,
+                        "&message=" + text.textContent,
+                        "&guid=" + this._guidGen()
+                    ].join('');
+                    $.ajax("https://api.vk.com/method/messages.send?v=5.37" + params + "&access_token=" + app.token, {
+
+                    }).done(function(data) {
+                        if(typeof data.response == 'number'){
+                            text.innerHTML = '';
+
+                        }
+                    });
+                }
+            },
             setScreenParams: function (data) {
                 console.log('ScreenParams :', data);
                 this.set('screenParams', data);
+
             },
             screenParamsChanged: function(){
+                var self = this;
                 this.currentUser = app.currentUser;
                 var code = [
                     'var response = API.messages.getHistory({"user_id": ' + this.screenParams.user.id + ', "count": 0});',
@@ -115,6 +225,13 @@
                     'return messages.items;'
                 ].join('');
                 this.$.ajax.url = "https://api.vk.com/method/execute?v=5.37&code=" + code + "&access_token=" + app.token;
+                console.log('Add listener');
+                app.longPoll.addEventListener('update:chat' + this.screenParams.user.id, this.messageActions.add);
+            },
+            detached: function() {
+                var self = this;
+                console.log('Detach listener');
+                app.longPoll.removeEventListener('update:chat' + this.screenParams.user.id, this.messageActions.add);
             }
         });
     </script>

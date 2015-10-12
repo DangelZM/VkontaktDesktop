@@ -2,7 +2,11 @@
   "use strict";
 
   var ipc = window.require('ipc');
+  window.$ = window.jQuery = window.require('./bower_components/jquery/dist/jquery.min.js');
+
   var app = document.querySelector('#app');
+  console.log(document.querySelector('#long-poll'));
+  app.longPoll = document.querySelector('#long-poll');
   app.player = document.querySelector('#app-player');
   app.token = localStorage.getItem('authToken');
   app.player.start();
@@ -17,6 +21,6 @@
     ipc.send('logout');
   };
 
-  longPoll.start();
+  app.longPoll.start();
 
 })(document);
