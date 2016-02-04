@@ -5,10 +5,12 @@
   "main": "index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-packager . VkDesktop --platform=win32 --arch=x64 --version=0.33.3 --out=./release"
+    "build:win": "electron-packager . VkDesktop --platform=win32 --arch=x64 --version=0.33.3 --out=./Release --overwrite --ignore=Release --icon=./assets/icons/VkDesktop.ico",
+    "build:linux": "electron-packager . VkDesktop --platform=linux --arch=x64 --version=0.33.3 --out=./Release --overwrite --ignore=Release",
+    "build:mac": "electron-packager . VkDesktop --platform=darwin --arch=x64 --version=0.33.3 --out=./Release --overwrite --ignore=Release --icon=./assets/icons/VkDesktop.icns"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Ivan Zmerzlyi",
+  "license": "MIT",
   "devDependencies": {
     "electron-packager": "^5.1.0",
     "electron-prebuilt": "^0.30.7"
